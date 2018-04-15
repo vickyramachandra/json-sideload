@@ -14,21 +14,30 @@ func ConvertJSON(jsonString string) string {
 	if err != nil {
 		fmt.Println("Malformed json provided", err)
 	}
-	parsedResp := parseJson(sourceMap, sourceMap)
+	parsedResp := parseJson(sourceMap, sourceMap, true)
+	for k, v := range parsedResp {
+		_type := reflect.TypeOf(v).Kind()
+		if _type == reflect.Array || _type == reflect.Slice {
+			delete(parsedResp, k)
+		}
+	}
 	resp, err := json.Marshal(parsedResp)
 	return string(resp)
 }
 
-func parseJson(sourceMap, mapToParse map[string]interface{}) map[string]interface{} {
+func parseJson(sourceMap, mapToParse map[string]interface{}, isRoot bool) map[string]interface{} {
 	parsedMap := make(map[string]interface{})
 	for k, v := range mapToParse {
 		if v != nil {
 			valueType := reflect.TypeOf(v).Kind()
 			if valueType == reflect.Map {
-				parsedMap[k] = parseJson(sourceMap, v.(map[string]interface{}))
+				parsedMap[k] = parseJson(sourceMap, v.(map[string]interface{}), false)
 			} else if strings.HasSuffix(k, "_id") {
 				key := strings.Split(k, "_id")[0]
-				parsedMap[key] = parseJson(sourceMap, getValueFromSourceJson(sourceMap, key+"s", getStringValue(v)).(map[string]interface{}))
+				value := getValueFromSourceJson(sourceMap, key+"s", getStringValue(v))
+				if value != nil {
+					parsedMap[key] = parseJson(sourceMap, value.(map[string]interface{}), false)
+				}
 			} else if !(valueType == reflect.Slice || valueType == reflect.Array) {
 				parsedMap[k] = v
 			}
@@ -48,11 +57,11 @@ func getStringValue(intf interface{}) string {
 }
 
 func getValueFromSourceJson(sourceJson map[string]interface{}, key, id string) interface{} {
-	arrayToSearch := sourceJson[key].([]interface{})
-	for _, v := range arrayToSearch {
-		valueMap := v.(map[string]interface{})
-		if getStringValue(valueMap["id"]) == id {
-			return v
+	if sourceJson[key] != nil && sourceJson[key].([]interface{}) != nil {
+		for _, v := range sourceJson[key].([]interface{}) {
+			if getStringValue(v.(map[string]interface{})["id"]) == id {
+				return v
+			}
 		}
 	}
 	return nil

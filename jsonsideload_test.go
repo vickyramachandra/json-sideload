@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConvertJSON(t *testing.T) {
@@ -12,5 +14,8 @@ func TestConvertJSON(t *testing.T) {
 		fmt.Println("File error", err)
 		return
 	}
-	fmt.Printf("%s", ConvertJSON(string(data)))
+	formedJSON := ConvertJSON(string(data))
+	fmt.Printf("%s", formedJSON)
+	assert.NotNil(t, formedJSON)
+	assert.NotEmpty(t, formedJSON)
 }
