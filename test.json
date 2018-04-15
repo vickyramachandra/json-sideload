@@ -1,33 +1,42 @@
 {
-    "session" : {
-        "name" : "sfdf",
-        "account_id" : 1,
-        "user_id" : 1
-    },
-    "accounts" : [
+    "session":{
+            "id":2,
+            "login_url":"https://staging-ui.fid.freshworksapi.com/login?client_id=2f34ab87-0a3e-43dc-9458-16ec510dfe97\u0026logout_uri=https%3A%2F%2Fftmobileqa.freshhr.com%2Fauth%2Ffreshid%2Flogout\u0026redirect_uri=https%3A%2F%2Fftmobileqa.freshhr.com%2Fauth%2Ffreshid%2Fcallback%3Fstate%3Dftmobileqa.freshhr.com\u0026su=true",
+            "authorize_url":"https://staging.fid.freshworksapi.com/oauth/authorize?client_id=2f34ab87-0a3e-43dc-9458-16ec510dfe97\u0026logout_uri=https%3A%2F%2Fftmobileqa.freshhr.com%2Fauth%2Ffreshid%2Flogout\u0026redirect_uri=https%3A%2F%2Fftmobileqa.freshhr.com%2Fauth%2Ffreshid%2Fcallback%3Fstate%3Dftmobileqa.freshhr.com\u0026response_type=code",
+            "account_id":466
+        },
+    "accounts":[
         {
-            "id" : 1,
-            "name" : "Account here",
-            "portal_id" : 2
-        }
+                "id":466,
+                "full_domain":"ftmobileqa.freshhr.com",
+                "time_zone":"Asia/Calcutta",
+                "language":"en",
+                "features":["google_plus","fone","linked_in","career_portal_customization","multi_location","org_chart","cnamed_ssl","business_reports","resume_parsing","facebook_page_tab","email_sync","custom_roles","whitelisted_ips","tasks_list","conversation_scheduling","multi_career_mail","offer_management","talent_pool","canned_responses","social_referral","job_embeds","internal_postings","custom_source_medium","applicant_form_customization","google_calendar","resume_parse_auto_complete","office365_calendar","free_jobboards","hacker_rank_screening","class_marker_screening","freshid","rate_applicant","skype_interviews","hacker_rank_code_pairing","google_hangout","google_meeting_rooms","codility","hacker_earth","sourcing_partner"],
+                "name":"Fresh Talents ",
+                "ssl_enabled":true,
+                "hire_reply_to":true,
+                "custom_ssl_fb_id":null,
+                "hire_responder_name":true,
+                "hire_original_sender":true,
+                "created_at":"2017-04-03T10:42:58.000Z",
+                "remote_ip":"49.206.121.7",
+                "deleted":false,
+                "industry_code":null,
+                "onboarding":null
+            }
     ],
-    "users" : [
+    "portals":[
         {
-            "id" : 1,
-            "name" : "User here",
-            "team_id" : 1
-        }
-    ],
-    "teams" : [
+                "id":927,
+                "name":"Workforce",
+                "account_id":466,
+                "main_portal":true
+        },
         {
-            "id" : 1,
-            "name" : "Team here"
-        }
-    ],
-    "portals" : [
-        {
-            "id" : 2,
-            "name" : "Portal here"
+                "id":929,
+                "name":"Careers",
+                "account_id":466,
+                "main_portal":false
         }
     ]
 }
