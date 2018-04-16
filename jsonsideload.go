@@ -34,15 +34,15 @@ func parseJSON(sourceMap, mapToParse map[string]interface{}, isRoot bool) map[st
 			valueType := reflect.TypeOf(v).Kind()
 			if valueType == reflect.Map {
 				parsedMap[k] = parseJSON(sourceMap, v.(map[string]interface{}), false)
-			} else if strings.HasSuffix(k, "_id") {
-				key := strings.Split(k, "_id")[0]
+			} else if isRelationshipHasOne(k) {
+				key := getRelationshipName(k)
 				value := getValueFromSourceJSON(sourceMap, key+"s", getStringValue(v))
 				if value != nil {
 					parsedMap[key] = parseJSON(sourceMap, value.(map[string]interface{}), false)
 				}
 			} else if !isRoot && valueType == reflect.Slice || valueType == reflect.Array {
-				if strings.HasSuffix(k, "_ids") {
-					key := strings.Split(k, "_ids")[0]
+				if isRelationshipHasMany(k) {
+					key := getRelationshipsName(k)
 					ids := v.([]interface{})
 					var arrayOfMaps []interface{}
 					for _, val := range ids {
@@ -56,6 +56,22 @@ func parseJSON(sourceMap, mapToParse map[string]interface{}, isRoot bool) map[st
 		}
 	}
 	return parsedMap
+}
+
+func isRelationshipHasOne(key string) bool {
+	return strings.HasSuffix(key, "_id")
+}
+
+func getRelationshipName(key string) string {
+	return strings.Split(key, "_id")[0]
+}
+
+func isRelationshipHasMany(key string) bool {
+	return strings.HasSuffix(key, "_ids")
+}
+
+func getRelationshipsName(key string) string {
+	return strings.Split(key, "_ids")[0]
 }
 
 // getStringValue -  for converting id types to string
