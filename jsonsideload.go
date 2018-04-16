@@ -8,13 +8,14 @@ import (
 	"strings"
 )
 
+// ConvertJSON - converts sideloaded JSON into a nested one
 func ConvertJSON(jsonString string) string {
 	var sourceMap map[string]interface{}
 	err := json.Unmarshal([]byte(jsonString), &sourceMap)
 	if err != nil {
 		fmt.Println("Malformed json provided", err)
 	}
-	parsedResp := parseJson(sourceMap, sourceMap, true)
+	parsedResp := parseJSON(sourceMap, sourceMap, true)
 	for k, v := range parsedResp {
 		_type := reflect.TypeOf(v).Kind()
 		if _type == reflect.Array || _type == reflect.Slice {
@@ -25,18 +26,29 @@ func ConvertJSON(jsonString string) string {
 	return string(resp)
 }
 
-func parseJson(sourceMap, mapToParse map[string]interface{}, isRoot bool) map[string]interface{} {
+// parseJSON - where the actually conversion happens using recursion
+func parseJSON(sourceMap, mapToParse map[string]interface{}, isRoot bool) map[string]interface{} {
 	parsedMap := make(map[string]interface{})
 	for k, v := range mapToParse {
 		if v != nil {
 			valueType := reflect.TypeOf(v).Kind()
 			if valueType == reflect.Map {
-				parsedMap[k] = parseJson(sourceMap, v.(map[string]interface{}), false)
+				parsedMap[k] = parseJSON(sourceMap, v.(map[string]interface{}), false)
 			} else if strings.HasSuffix(k, "_id") {
 				key := strings.Split(k, "_id")[0]
-				value := getValueFromSourceJson(sourceMap, key+"s", getStringValue(v))
+				value := getValueFromSourceJSON(sourceMap, key+"s", getStringValue(v))
 				if value != nil {
-					parsedMap[key] = parseJson(sourceMap, value.(map[string]interface{}), false)
+					parsedMap[key] = parseJSON(sourceMap, value.(map[string]interface{}), false)
+				}
+			} else if !isRoot && valueType == reflect.Slice || valueType == reflect.Array {
+				if strings.HasSuffix(k, "_ids") {
+					key := strings.Split(k, "_ids")[0]
+					ids := v.([]interface{})
+					var arrayOfMaps []interface{}
+					for _, val := range ids {
+						arrayOfMaps = append(arrayOfMaps, getValueFromSourceJSON(sourceMap, key+"s", getStringValue(val)))
+					}
+					parsedMap[key+"s"] = arrayOfMaps
 				}
 			} else if !(valueType == reflect.Slice || valueType == reflect.Array) {
 				parsedMap[k] = v
@@ -46,19 +58,23 @@ func parseJson(sourceMap, mapToParse map[string]interface{}, isRoot bool) map[st
 	return parsedMap
 }
 
+// getStringValue -  for converting id types to string
 func getStringValue(intf interface{}) string {
 	switch intf.(type) {
 	case int:
 		return strconv.Itoa(intf.(int))
 	case float64:
 		return strconv.FormatFloat(intf.(float64), 'f', -1, 64)
+	case string:
+		return intf.(string)
 	}
 	return ""
 }
 
-func getValueFromSourceJson(sourceJson map[string]interface{}, key, id string) interface{} {
-	if sourceJson[key] != nil && sourceJson[key].([]interface{}) != nil {
-		for _, v := range sourceJson[key].([]interface{}) {
+// getValueFromSourceJSON - get the sideloaded value from the sourceJSON
+func getValueFromSourceJSON(sourceJSON map[string]interface{}, key, id string) interface{} {
+	if sourceJSON[key] != nil && sourceJSON[key].([]interface{}) != nil {
+		for _, v := range sourceJSON[key].([]interface{}) {
 			if getStringValue(v.(map[string]interface{})["id"]) == id {
 				return v
 			}
