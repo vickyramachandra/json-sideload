@@ -2,57 +2,19 @@ package jsonsideload
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 )
 
-type SessionResponse struct {
-	Session *Session `jsonsideload:"hasone,session"`
-}
-
-// ConvertJSON - converts sideloaded JSON into a nested one
-func ConvertJSON(jsonString string) string {
+// Unmarshal - maps sideloaded JSON to the given model
+func Unmarshal(jsonPayload []byte, model interface{}) error {
 	var sourceMap map[string]interface{}
-	err := json.Unmarshal([]byte(jsonString), &sourceMap)
+	err := json.Unmarshal((jsonPayload), &sourceMap)
 	if err != nil {
-		fmt.Println("Malformed json provided", err)
+		return ErrBadJSON
 	}
-	sessionResponse := new(SessionResponse)
-	err = unMarshalPayload(sourceMap, sourceMap, reflect.ValueOf(sessionResponse))
-	if err != nil {
-		fmt.Println(err)
-	}
-	resp, err := json.Marshal(sessionResponse)
-	return string(resp)
+	return unMarshalNode(sourceMap, sourceMap, reflect.ValueOf(model))
 }
-
-var (
-	// ErrBadJSONSideloadStructTag is returned when the Struct field's JSON API
-	// annotation is invalid.
-	ErrBadJSONSideloadStructTag = errors.New("Bad json-sideload struct tag format")
-	// ErrBadJSONSideloadID is returned when the Struct JSONJSONSideload annotated "id" field
-	// was not a valid numeric type.
-	ErrBadJSONSideloadID = errors.New(
-		"id should be either string, int(8,16,32,64) or uint(8,16,32,64)")
-	// ErrUnknownFieldNumberType is returned when the JSON value was a float
-	// (numeric) but the Struct field was a non numeric type (i.e. not int, uint,
-	// float, etc)
-	ErrUnknownFieldNumberType = errors.New("The struct field was not of a known number type")
-	// ErrExpectedSlice is returned when a variable or arugment was expected to
-	// be a slice of *Structs; MarshalMany will return this error when its
-	// interface{} argument is invalid.
-	ErrExpectedSlice = errors.New("models should be a slice of struct pointers")
-	// ErrUnexpectedType is returned when marshalling an interface; the interface
-	// had to be a pointer or a slice; otherwise this error is returned.
-	ErrUnexpectedType = errors.New("models should be a struct pointer or slice of struct pointers")
-	// ErrUnsupportedPtrType is returned when the Struct field was a pointer but
-	// the JSON value was of a different type
-	ErrUnsupportedPtrType = errors.New("Pointer type in struct is not supported")
-	// ErrInvalidType is returned when the given type is incompatible with the expected type.
-	ErrInvalidType = errors.New("Invalid type provided")
-)
 
 const (
 	annotationJSONSideload    = "jsonsideload"
@@ -61,14 +23,14 @@ const (
 	annotationHasManyRelation = "hasmany"
 )
 
-func unMarshalPayload(sourceMap, mapToParse map[string]interface{}, model reflect.Value) (err error) {
+func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.Value) (err error) {
 	modelValue := model.Elem()
 	modelType := model.Type().Elem()
 
 	var er error
 	for i := 0; i < modelValue.NumField(); i++ {
 		fieldType := modelType.Field(i)
-		tag := fieldType.Tag.Get("jsonsideload")
+		tag := fieldType.Tag.Get(annotationJSONSideload)
 		if tag == "" {
 			continue
 		}
@@ -193,7 +155,7 @@ func unMarshalPayload(sourceMap, mapToParse map[string]interface{}, model reflec
 				relationMap = getValueFromSourceJSON(sourceMap, relation, mapToParse[args[2]].(float64)).(map[string]interface{})
 			}
 			m := reflect.New(fieldValue.Type().Elem())
-			if err := unMarshalPayload(sourceMap, relationMap, m); err != nil {
+			if err := unMarshalNode(sourceMap, relationMap, m); err != nil {
 				er = err
 				break
 			}
@@ -203,7 +165,7 @@ func unMarshalPayload(sourceMap, mapToParse map[string]interface{}, model reflec
 			for _, n := range mapToParse[args[2]].([]interface{}) {
 				m := reflect.New(fieldValue.Type().Elem().Elem())
 				relationMap := getValueFromSourceJSON(sourceMap, relation, n.(float64))
-				if err := unMarshalPayload(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
+				if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
 					er = err
 					break
 				}

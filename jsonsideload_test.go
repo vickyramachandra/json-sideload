@@ -1,6 +1,7 @@
 package jsonsideload
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -8,14 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConvertJSON(t *testing.T) {
+func TestUnmarshal(t *testing.T) {
 	data, err := ioutil.ReadFile("test.json")
 	if err != nil {
 		fmt.Println("File error", err)
 		return
 	}
-	formedJSON := ConvertJSON(string(data))
-	fmt.Printf("%s", formedJSON)
-	assert.NotNil(t, formedJSON)
-	assert.NotEmpty(t, formedJSON)
+	personResp := new(PersonResponse)
+	err = Unmarshal(data, personResp)
+	assert.Nil(t, err)
+	resp, err := json.Marshal(personResp)
+	if err != nil {
+		fmt.Println("Json marshal error", err)
+		return
+	}
+	fmt.Println(string(resp))
+
 }
