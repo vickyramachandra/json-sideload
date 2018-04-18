@@ -2,6 +2,8 @@ package jsonsideload
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -11,7 +13,7 @@ func Unmarshal(jsonPayload []byte, model interface{}) error {
 	var sourceMap map[string]interface{}
 	err := json.Unmarshal((jsonPayload), &sourceMap)
 	if err != nil {
-		return ErrBadJSON
+		return errors.New("Malformed JSON provided")
 	}
 	return unMarshalNode(sourceMap, sourceMap, reflect.ValueOf(model))
 }
@@ -38,7 +40,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 		fieldValue := modelValue.Field(i)
 		args := strings.Split(tag, ",")
 		if len(args) < 1 {
-			er = ErrBadJSONSideloadStructTag
+			er = errors.New("Bad json-sideload struct tag format")
 			break
 		}
 		annotation := args[0]
@@ -104,7 +106,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					n := floatValue
 					numericValue = reflect.ValueOf(&n)
 				default:
-					return ErrUnknownFieldNumberType
+					return fmt.Errorf("The struct field %s was not of a known number type", fieldValue)
 				}
 
 				assign(fieldValue, numericValue)
@@ -126,11 +128,11 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 				case uintptr:
 					concreteVal = reflect.ValueOf(&cVal)
 				default:
-					return ErrUnsupportedPtrType
+					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue)
 				}
 
 				if fieldValue.Type() != concreteVal.Type() {
-					return ErrUnsupportedPtrType
+					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue)
 				}
 
 				fieldValue.Set(concreteVal)
@@ -144,7 +146,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 
 			// As a final catch-all, ensure types line up to avoid a runtime panic.
 			if fieldValue.Kind() != v.Kind() {
-				return ErrInvalidType
+				return fmt.Errorf("Invalid type provided for %s in struct", fieldValue)
 			}
 			fieldValue.Set(reflect.ValueOf(val))
 		} else if annotation == annotationHasOneRelation {
