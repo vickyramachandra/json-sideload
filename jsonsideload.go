@@ -161,17 +161,31 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			}
 			fieldValue.Set(m)
 		} else if annotation == annotationHasManyRelation {
-			models := reflect.New(fieldValue.Type()).Elem()
-			for _, n := range mapToParse[args[2]].([]interface{}) {
-				m := reflect.New(fieldValue.Type().Elem().Elem())
-				relationMap := getValueFromSourceJSON(sourceMap, relation, n.(float64))
-				if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
-					er = err
-					break
+			if len(args) < 3 { // this means the array is already nested
+				models := reflect.New(fieldValue.Type()).Elem()
+				for _, n := range mapToParse[args[1]].([]interface{}) {
+					m := reflect.New(fieldValue.Type().Elem().Elem())
+					if err := unMarshalNode(sourceMap, n.(map[string]interface{}), m); err != nil {
+						er = err
+						break
+					}
+					models = reflect.Append(models, m)
 				}
-				models = reflect.Append(models, m)
+				fieldValue.Set(models)
+			} else {
+				models := reflect.New(fieldValue.Type()).Elem()
+				for _, n := range mapToParse[args[2]].([]interface{}) {
+					m := reflect.New(fieldValue.Type().Elem().Elem())
+					relationMap := getValueFromSourceJSON(sourceMap, relation, n.(float64))
+					if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
+						er = err
+						break
+					}
+					models = reflect.Append(models, m)
+				}
+				fieldValue.Set(models)
+
 			}
-			fieldValue.Set(models)
 		}
 	}
 	return er

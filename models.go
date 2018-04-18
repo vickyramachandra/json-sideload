@@ -1,7 +1,7 @@
 package jsonsideload
 
 type PersonResponse struct {
-	Person *Person `jsonsideload:"hasone,person"`
+	Persons []*Person `jsonsideload:"hasmany,persons"`
 }
 
 type Person struct {

@@ -1,10 +1,10 @@
 {
-    "person" : {
+    "persons" : [{
         "id" : 1,
         "name" : "Vignesh",
         "current_city_id" : 1,
         "lived_city_ids" : [1,2,3]
-    },
+    }],
     "cities":[
         {
             "id" : 1,
