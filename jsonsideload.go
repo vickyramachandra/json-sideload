@@ -150,6 +150,9 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			}
 			fieldValue.Set(reflect.ValueOf(val))
 		} else if annotation == annotationHasOneRelation {
+			if fieldValue.Kind() != reflect.Ptr {
+				return fmt.Errorf("Expecting pointer type for %s in struct", fieldType.Name)
+			}
 			relationMap := make(map[string]interface{})
 			if len(args) < 3 { // this means the json is already nested
 				relationMap = mapToParse[relation].(map[string]interface{})
@@ -186,7 +189,6 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					models = reflect.Append(models, m)
 				}
 				fieldValue.Set(models)
-
 			}
 		}
 	}
