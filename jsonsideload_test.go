@@ -28,5 +28,4 @@ func TestUnmarshal(t *testing.T) {
 		return
 	}
 	fmt.Println(string(resp))
-
 }

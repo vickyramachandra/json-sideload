@@ -26,6 +26,14 @@ const (
 )
 
 func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.Value) (err error) {
+	jsonString, err := json.Marshal(mapToParse)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(jsonString, model.Interface())
+	if err != nil {
+		return err
+	}
 	modelValue := model.Elem()
 	modelType := model.Type().Elem()
 
@@ -46,110 +54,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 		annotation := args[0]
 		relation := args[1]
 
-		if annotation == annotationAttribute {
-			val := mapToParse[relation]
-			if relation == "" || val == nil {
-				continue
-			}
-
-			v := reflect.ValueOf(val)
-
-			if v.Kind() == reflect.Float64 {
-				floatValue := v.Interface().(float64)
-
-				// The field may or may not be a pointer to a numeric; the kind var
-				// will not contain a pointer type
-				var kind reflect.Kind
-				if fieldValue.Kind() == reflect.Ptr {
-					kind = fieldType.Type.Elem().Kind()
-				} else {
-					kind = fieldType.Type.Kind()
-				}
-
-				var numericValue reflect.Value
-
-				switch kind {
-				case reflect.Int:
-					n := int(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Int8:
-					n := int8(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Int16:
-					n := int16(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Int32:
-					n := int32(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Int64:
-					n := int64(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Uint:
-					n := uint(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Uint8:
-					n := uint8(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Uint16:
-					n := uint16(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Uint32:
-					n := uint32(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Uint64:
-					n := uint64(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Float32:
-					n := float32(floatValue)
-					numericValue = reflect.ValueOf(&n)
-				case reflect.Float64:
-					n := floatValue
-					numericValue = reflect.ValueOf(&n)
-				default:
-					return fmt.Errorf("Expecting %s for attribute %s in %s, but got %s", fieldValue.Type(), fieldType.Name, modelValue.Type(), v.Kind())
-				}
-
-				assign(fieldValue, numericValue)
-				continue
-			}
-			// Field was a Pointer type
-			if fieldValue.Kind() == reflect.Ptr {
-				var concreteVal reflect.Value
-
-				switch cVal := val.(type) {
-				case string:
-					concreteVal = reflect.ValueOf(&cVal)
-				case bool:
-					concreteVal = reflect.ValueOf(&cVal)
-				case complex64:
-					concreteVal = reflect.ValueOf(&cVal)
-				case complex128:
-					concreteVal = reflect.ValueOf(&cVal)
-				case uintptr:
-					concreteVal = reflect.ValueOf(&cVal)
-				default:
-					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue.Type())
-				}
-
-				if fieldValue.Type() != concreteVal.Type() {
-					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue.Type())
-				}
-
-				fieldValue.Set(concreteVal)
-				continue
-			}
-
-			if fieldValue.Kind() == reflect.String {
-				assign(fieldValue, reflect.ValueOf(val))
-				continue
-			}
-
-			// As a final catch-all, ensure types line up to avoid a runtime panic.
-			if fieldValue.Kind() != v.Kind() {
-				return fmt.Errorf("Expecting %s for attribute %s in %s, but got %s", fieldValue.Type(), fieldType.Name, modelValue.Type(), v.Kind())
-			}
-			fieldValue.Set(reflect.ValueOf(val))
-		} else if annotation == annotationHasOneRelation {
+		if annotation == annotationHasOneRelation {
 			if fieldValue.Kind() != reflect.Ptr {
 				return fmt.Errorf("Expecting pointer type for %s in struct", fieldType.Name)
 			}
