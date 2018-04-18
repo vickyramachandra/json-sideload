@@ -26,6 +26,11 @@ const (
 )
 
 func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.Value) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Data is not a jsonsideload representation of '%v'", model.Type())
+		}
+	}()
 	jsonString, err := json.Marshal(mapToParse)
 	if err != nil {
 		return err
