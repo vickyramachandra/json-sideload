@@ -106,7 +106,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					n := floatValue
 					numericValue = reflect.ValueOf(&n)
 				default:
-					return fmt.Errorf("The struct field %s was not of a known number type", fieldValue)
+					return fmt.Errorf("Expecting %s for attribute %s in %s, but got %s", fieldValue.Type(), fieldType.Name, modelValue.Type(), v.Kind())
 				}
 
 				assign(fieldValue, numericValue)
@@ -128,11 +128,11 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 				case uintptr:
 					concreteVal = reflect.ValueOf(&cVal)
 				default:
-					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue)
+					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue.Type())
 				}
 
 				if fieldValue.Type() != concreteVal.Type() {
-					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue)
+					return fmt.Errorf("Pointer type %s in struct is not supported", fieldValue.Type())
 				}
 
 				fieldValue.Set(concreteVal)
@@ -146,7 +146,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 
 			// As a final catch-all, ensure types line up to avoid a runtime panic.
 			if fieldValue.Kind() != v.Kind() {
-				return fmt.Errorf("Invalid type provided for %s in struct", fieldValue)
+				return fmt.Errorf("Expecting %s for attribute %s in %s, but got %s", fieldValue.Type(), fieldType.Name, modelValue.Type(), v.Kind())
 			}
 			fieldValue.Set(reflect.ValueOf(val))
 		} else if annotation == annotationHasOneRelation {

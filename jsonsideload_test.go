@@ -17,6 +17,10 @@ func TestUnmarshal(t *testing.T) {
 	}
 	personResp := new(PersonResponse)
 	err = Unmarshal(data, personResp)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	assert.Nil(t, err)
 	resp, err := json.Marshal(personResp)
 	if err != nil {
