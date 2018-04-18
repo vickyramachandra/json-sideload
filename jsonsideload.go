@@ -58,11 +58,19 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			if fieldValue.Kind() != reflect.Ptr {
 				return fmt.Errorf("Expecting pointer type for %s in struct", fieldType.Name)
 			}
-			relationMap := make(map[string]interface{})
+			var relationMap map[string]interface{}
 			if len(args) < 3 { // this means the json is already nested
-				relationMap = mapToParse[relation].(map[string]interface{})
+				relationObj := mapToParse[relation]
+				if relationObj != nil {
+					if mapObj, ok := relationObj.(map[string]interface{}); ok {
+						relationMap = mapObj
+					}
+				}
 			} else {
-				relationMap = getValueFromSourceJSON(sourceMap, relation, mapToParse[args[2]].(float64)).(map[string]interface{})
+				relationID := mapToParse[args[2]]
+				if relationID != nil {
+					relationMap = getValueFromSourceJSON(sourceMap, relation, relationID.(float64)).(map[string]interface{})
+				}
 			}
 			m := reflect.New(fieldValue.Type().Elem())
 			if err := unMarshalNode(sourceMap, relationMap, m); err != nil {
@@ -73,25 +81,37 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 		} else if annotation == annotationHasManyRelation {
 			if len(args) < 3 { // this means the array is already nested
 				models := reflect.New(fieldValue.Type()).Elem()
-				for _, n := range mapToParse[args[1]].([]interface{}) {
-					m := reflect.New(fieldValue.Type().Elem().Elem())
-					if err := unMarshalNode(sourceMap, n.(map[string]interface{}), m); err != nil {
-						er = err
-						break
+				hasManyRelations := mapToParse[args[1]]
+				if hasManyRelations != nil {
+					if relationsArray, ok := hasManyRelations.([]interface{}); ok {
+						for _, n := range relationsArray {
+							m := reflect.New(fieldValue.Type().Elem().Elem())
+							if err := unMarshalNode(sourceMap, n.(map[string]interface{}), m); err != nil {
+								er = err
+								break
+							}
+							models = reflect.Append(models, m)
+						}
 					}
-					models = reflect.Append(models, m)
 				}
 				fieldValue.Set(models)
 			} else {
 				models := reflect.New(fieldValue.Type()).Elem()
-				for _, n := range mapToParse[args[2]].([]interface{}) {
-					m := reflect.New(fieldValue.Type().Elem().Elem())
-					relationMap := getValueFromSourceJSON(sourceMap, relation, n.(float64))
-					if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
-						er = err
-						break
+				hasManyRelations := mapToParse[args[2]]
+				if hasManyRelations != nil {
+					if relationsArray, ok := hasManyRelations.([]interface{}); ok {
+						for _, n := range relationsArray {
+							m := reflect.New(fieldValue.Type().Elem().Elem())
+							relationMap := getValueFromSourceJSON(sourceMap, relation, n.(float64))
+							if relationMap != nil {
+								if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
+									er = err
+									break
+								}
+								models = reflect.Append(models, m)
+							}
+						}
 					}
-					models = reflect.Append(models, m)
 				}
 				fieldValue.Set(models)
 			}
@@ -112,10 +132,13 @@ func assign(field, value reflect.Value) {
 
 // getValueFromSourceJSON - get the sideloaded value from the sourceJSON
 func getValueFromSourceJSON(sourceJSON map[string]interface{}, key string, id float64) interface{} {
-	if sourceJSON[key] != nil && sourceJSON[key].([]interface{}) != nil {
-		for _, v := range sourceJSON[key].([]interface{}) {
-			if v.(map[string]interface{})["id"] == id {
-				return v
+	valFromSourceJSON := sourceJSON[key]
+	if valFromSourceJSON != nil {
+		if valueArray, ok := sourceJSON[key].([]interface{}); ok {
+			for _, v := range valueArray {
+				if valueMap, ok := v.(map[string]interface{}); ok && valueMap["id"] == id {
+					return v
+				}
 			}
 		}
 	}
