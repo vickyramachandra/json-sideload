@@ -40,7 +40,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 		fieldValue := modelValue.Field(i)
 		args := strings.Split(tag, ",")
 		if len(args) < 1 {
-			er = errors.New("Bad json-sideload struct tag format")
+			er = errors.New("Bad jsonsideload struct tag format")
 			break
 		}
 		annotation := args[0]
