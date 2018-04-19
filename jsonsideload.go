@@ -74,13 +74,18 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			} else {
 				relationID := mapToParse[args[2]]
 				if relationID != nil {
-					relationMap = getValueFromSourceJSON(sourceMap, relation, relationID.(float64)).(map[string]interface{})
+					valueMap := getValueFromSourceJSON(sourceMap, relation, relationID.(float64))
+					if valueMap != nil {
+						relationMap = valueMap.(map[string]interface{})
+					}
 				}
 			}
 			m := reflect.New(fieldValue.Type().Elem())
-			if err := unMarshalNode(sourceMap, relationMap, m); err != nil {
-				er = err
-				break
+			if relationMap != nil {
+				if err := unMarshalNode(sourceMap, relationMap, m); err != nil {
+					er = err
+					break
+				}
 			}
 			fieldValue.Set(m)
 		} else if annotation == annotationHasManyRelation {
