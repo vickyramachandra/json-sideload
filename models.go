@@ -14,8 +14,8 @@ type PersonResponse struct {
 type Person struct {
 	ID          json.Number   `json:"id"`
 	Name        string        `json:"name"`
-	CurrentCity *City         `jsonsideload:"hasone,cities,current_city_id" json:"city"`
-	LivedCities []*City       `jsonsideload:"hasmany,cities,lived_city_ids"`
+	CurrentCity *City         `json:"city" jsonsideload:"hasone,cities,current_city_id" json:"city"`
+	LivedCities []*City       `json:"lived_cities" jsonsideload:"hasmany,cities,lived_city_ids"`
 	Dob         *time.Time    `json:"dob"`
 	ShortDob    *mytime.Ctime `json:"short_dob"`
 }
