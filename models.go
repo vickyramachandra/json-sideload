@@ -8,7 +8,7 @@ import (
 )
 
 type PersonResponse struct {
-	Persons []*Person `jsonsideload:"hasmany,persons"`
+	Persons []*Person `json:"persons" jsonsideload:"includes,persons"`
 }
 
 type Person struct {
