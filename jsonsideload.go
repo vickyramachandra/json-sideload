@@ -165,16 +165,6 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 	return er
 }
 
-// assign will take the value specified and assign it to the field; if
-// field is expecting a ptr assign will assign a ptr.
-func assign(field, value reflect.Value) {
-	if field.Kind() == reflect.Ptr {
-		field.Set(value)
-	} else {
-		field.Set(reflect.Indirect(value))
-	}
-}
-
 // getValueFromSourceJSON - get the sideloaded value from the sourceJSON
 func getValueFromSourceJSON(sourceJSON map[string]interface{}, key string, id float64) interface{} {
 	valFromSourceJSON := sourceJSON[key]
