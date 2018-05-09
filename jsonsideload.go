@@ -15,7 +15,7 @@ func Unmarshal(jsonPayload []byte, model interface{}) error {
 	if err != nil {
 		return errors.New("Malformed JSON provided")
 	}
-	return unMarshalNode(sourceMap, sourceMap, reflect.ValueOf(model))
+	return unMarshalNode(sourceMap, sourceMap, reflect.ValueOf(model), make([]string, 0))
 }
 
 const (
@@ -26,7 +26,7 @@ const (
 	annotationHasManyRelation = "hasmany"
 )
 
-func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.Value) (err error) {
+func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.Value, hierarchy []string) (err error) {
 	// recovering for any wrong representation in struct
 	defer func() {
 		if r := recover(); r != nil {
@@ -79,9 +79,12 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					relationMap = mapObj
 				}
 			}
+			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+
 			m := reflect.New(fieldValue.Type().Elem())
-			if relationMap != nil {
-				if err := unMarshalNode(sourceMap, relationMap, m); err != nil {
+			if relationMap != nil && !isRelationshipInParent {
+				hierarchy = append(hierarchy, fieldType.Name)
+				if err := unMarshalNode(sourceMap, relationMap, m, hierarchy); err != nil {
 					er = err
 					break
 				}
@@ -94,14 +97,17 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			if fieldValue.Type().Elem().Kind() != reflect.Ptr {
 				return fmt.Errorf("Expecting array of pointers for %s in struct", fieldType.Name)
 			}
+			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+
 			relation := args[1]
 			models := reflect.New(fieldValue.Type()).Elem()
 			hasManyRelations := mapToParse[relation]
-			if hasManyRelations != nil {
+			if hasManyRelations != nil && !isRelationshipInParent {
+				hierarchy = append(hierarchy, fieldType.Name)
 				if relationsArray, ok := hasManyRelations.([]interface{}); ok {
 					for _, n := range relationsArray {
 						m := reflect.New(fieldValue.Type().Elem().Elem())
-						if err := unMarshalNode(sourceMap, n.(map[string]interface{}), m); err != nil {
+						if err := unMarshalNode(sourceMap, n.(map[string]interface{}), m, hierarchy); err != nil {
 							er = err
 							break
 						}
@@ -126,9 +132,12 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					relationMap = valueMap.(map[string]interface{})
 				}
 			}
+			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+
 			m := reflect.New(fieldValue.Type().Elem())
-			if relationMap != nil {
-				if err := unMarshalNode(sourceMap, relationMap, m); err != nil {
+			if relationMap != nil && !isRelationshipInParent {
+				hierarchy = append(hierarchy, fieldType.Name)
+				if err := unMarshalNode(sourceMap, relationMap, m, hierarchy); err != nil {
 					er = err
 					break
 				}
@@ -143,14 +152,17 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			}
 			models := reflect.New(fieldValue.Type()).Elem()
 			relation := args[1]
+			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+
 			hasManyRelations := mapToParse[args[2]]
-			if hasManyRelations != nil {
+			if hasManyRelations != nil && !isRelationshipInParent {
+				hierarchy = append(hierarchy, fieldType.Name)
 				if relationsArray, ok := hasManyRelations.([]interface{}); ok {
 					for _, n := range relationsArray { // range on the array of relationship IDS and get each relationship from the source tree
 						m := reflect.New(fieldValue.Type().Elem().Elem())
 						relationMap := getValueFromSourceJSON(sourceMap, relation, n.(float64))
 						if relationMap != nil {
-							if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m); err != nil {
+							if err := unMarshalNode(sourceMap, relationMap.(map[string]interface{}), m, hierarchy); err != nil {
 								er = err
 								break
 							}
