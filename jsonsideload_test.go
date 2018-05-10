@@ -9,8 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func prepareTestData() ([]byte, error) {
+	return ioutil.ReadFile("test.json")
+}
+
 func TestUnmarshal(t *testing.T) {
-	data, err := ioutil.ReadFile("test.json")
+	data, err := prepareTestData()
 	if err != nil {
 		fmt.Println("File error", err)
 		return
@@ -28,4 +32,25 @@ func TestUnmarshal(t *testing.T) {
 		return
 	}
 	fmt.Println(string(resp))
+}
+
+// Benchmark Tests
+
+var personResp PersonResponse
+
+func BenchmarkUnmarshal(b *testing.B) {
+	data, err := prepareTestData()
+	personResp := new(PersonResponse)
+	if err != nil {
+		return
+	}
+	for i := 0; i < b.N; i++ {
+		Unmarshal(data, personResp)
+	}
+}
+
+func BenchmarkMarshal(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		json.Marshal(personResp)
+	}
 }
