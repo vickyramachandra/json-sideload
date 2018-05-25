@@ -11,9 +11,9 @@ import (
 // Unmarshal - maps sideloaded JSON to the given model
 func Unmarshal(jsonPayload []byte, model interface{}) error {
 	var sourceMap map[string]interface{}
-	err := json.Unmarshal((jsonPayload), &sourceMap)
+	err := json.Unmarshal(jsonPayload, &sourceMap)
 	if err != nil {
-		return errors.New("Malformed JSON provided")
+		return errors.New("malformed JSON provided")
 	}
 	return unMarshalNode(sourceMap, sourceMap, reflect.ValueOf(model), make([]string, 0))
 }
@@ -30,7 +30,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 	// recovering for any wrong representation in struct
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("Data is not a jsonsideload representation of '%v'", model.Type())
+			err = fmt.Errorf("data is not a jsonsideload representation of '%v'", model.Type())
 		}
 	}()
 
@@ -58,7 +58,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 		fieldValue := modelValue.Field(i)
 		args := strings.Split(tag, ",")
 		if len(args) < 1 { // Error, if there aren't any realationship with the tag
-			er = errors.New("Bad jsonsideload struct tag format")
+			er = errors.New("bad jsonsideload struct tag format")
 			break
 		}
 		annotation := args[0]
@@ -66,10 +66,10 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 		// annotation includes means the object is already nested and not sideloaded
 		if annotation == annotationInclude {
 			if fieldValue.Kind() != reflect.Ptr { // Only pointer types are allowed in struct
-				return fmt.Errorf("Expecting pointer type for %s in struct", fieldType.Name)
+				return fmt.Errorf("expecting pointer type for %s in struct", fieldType.Name)
 			}
 			if len(args) < 2 {
-				return fmt.Errorf("No relationship found in annotation for %s", fieldType.Name)
+				return fmt.Errorf("no relationship found in annotation for %s", fieldType.Name)
 			}
 			relation := args[1]
 			var relationMap map[string]interface{}
@@ -92,10 +92,10 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			fieldValue.Set(m)
 		} else if annotation == annotationIncludes { // annotation includes mean, the array is already nested and not sideloaded
 			if len(args) < 2 {
-				return fmt.Errorf("No relationship found in annotation for %s", fieldType.Name)
+				return fmt.Errorf("no relationship found in annotation for %s", fieldType.Name)
 			}
 			if fieldValue.Type().Elem().Kind() != reflect.Ptr {
-				return fmt.Errorf("Expecting array of pointers for %s in struct", fieldType.Name)
+				return fmt.Errorf("expecting array of pointers for %s in struct", fieldType.Name)
 			}
 			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
 
@@ -118,10 +118,10 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			fieldValue.Set(models)
 		} else if annotation == annotationHasOneRelation { // hasone means, the relationship is sideloaded
 			if fieldValue.Kind() != reflect.Ptr {
-				return fmt.Errorf("Expecting pointer type for %s in struct", fieldType.Name)
+				return fmt.Errorf("expecting pointer type for %s in struct", fieldType.Name)
 			}
 			if len(args) < 2 {
-				return fmt.Errorf("No relationship found in annotation for %s", fieldType.Name)
+				return fmt.Errorf("no relationship found in annotation for %s", fieldType.Name)
 			}
 			var relationMap map[string]interface{}
 			relation := args[1]
@@ -145,10 +145,10 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			fieldValue.Set(m)
 		} else if annotation == annotationHasManyRelation { // hasmany means, the relationships is sideloaded
 			if len(args) < 2 {
-				return fmt.Errorf("No relationship found in annotation for %s", fieldType.Name)
+				return fmt.Errorf("no relationship found in annotation for %s", fieldType.Name)
 			}
 			if fieldValue.Type().Elem().Kind() != reflect.Ptr {
-				return fmt.Errorf("Expecting array of pointers for %s in struct", fieldType.Name)
+				return fmt.Errorf("expecting array of pointers for %s in struct", fieldType.Name)
 			}
 			models := reflect.New(fieldValue.Type()).Elem()
 			relation := args[1]
