@@ -1,5 +1,7 @@
 # json-sideload
 
+[![Build Status](https://travis-ci.com/vickyramachandra/json-sideload.svg?branch=master)](https://travis-ci.com/vickyramachandra/json-sideload)
+
 A deserializer for JSON payloads that comply to the
 [ActiveModel::Serializer](https://github.com/rails-api/active_model_serializers) spec in go.
 
