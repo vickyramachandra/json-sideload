@@ -128,7 +128,7 @@ Unmarshal(jsonPayload []byte, model interface{}) error
 ##### Example Code
 
 ```go
-func parseResponse(w http.ResponseWriter, r *http.Request) {
+func parseResponse(data []byte) {
 	personResp := new(PersonResponse)
 	if err := Unmarshal(data, personResp); err != nil {
 		fmt.Println(err)
