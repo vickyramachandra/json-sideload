@@ -138,6 +138,11 @@ func parseResponse(data []byte) {
 }
 ```
 
+## TODO
+- Extensive code coverage
+- Exhaustive unit tests
+- Marshaler implementation
+
 ## Contributing
 
 Fork, Change, Pull Request *with tests*.
