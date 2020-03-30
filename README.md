@@ -7,7 +7,7 @@ A deserializer for JSON payloads that comply to the
 
 ## Installation
 
-```
+```bash
 go get github.com/vickyramachandra/json-sideload
 ```
 
@@ -141,7 +141,7 @@ func parseResponse(data []byte) {
 ## TODO
 - Extensive code coverage
 - Exhaustive unit tests
-- Marshaler implementation
+- Marshaller implementation
 
 ## Contributing
 
