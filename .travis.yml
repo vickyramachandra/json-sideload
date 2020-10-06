@@ -4,7 +4,6 @@ language: go
 # updates. Any older versions be considered deprecated. Don't bother testing
 # with them.
 go:
-  - 1.8.x
-  - 1.9.x
-  - 1.10.x
+  - 1.15.x
+  - 1.14.x
 script: go test ./... -v
