@@ -79,7 +79,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					relationMap = mapObj
 				}
 			}
-			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+			isRelationshipInParent := isRelationshipInSlice(fieldType.Name, hierarchy)
 
 			m := reflect.New(fieldValue.Type().Elem())
 			if relationMap != nil && !isRelationshipInParent {
@@ -97,7 +97,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			if fieldValue.Type().Elem().Kind() != reflect.Ptr {
 				return fmt.Errorf("expecting array of pointers for %s in struct", fieldType.Name)
 			}
-			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+			isRelationshipInParent := isRelationshipInSlice(fieldType.Name, hierarchy)
 
 			relation := args[1]
 			models := reflect.New(fieldValue.Type()).Elem()
@@ -132,7 +132,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 					relationMap = valueMap.(map[string]interface{})
 				}
 			}
-			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+			isRelationshipInParent := isRelationshipInSlice(fieldType.Name, hierarchy)
 
 			m := reflect.New(fieldValue.Type().Elem())
 			if relationMap != nil && !isRelationshipInParent {
@@ -152,7 +152,7 @@ func unMarshalNode(sourceMap, mapToParse map[string]interface{}, model reflect.V
 			}
 			models := reflect.New(fieldValue.Type()).Elem()
 			relation := args[1]
-			isRelationshipInParent := IsRelationshipInSlice(fieldType.Name, hierarchy)
+			isRelationshipInParent := isRelationshipInSlice(fieldType.Name, hierarchy)
 
 			hasManyRelations := mapToParse[args[2]]
 			if hasManyRelations != nil && !isRelationshipInParent {
